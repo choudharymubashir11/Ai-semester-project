@@ -1,0 +1,45 @@
+#Text Classification Model.
+import numpy as np #linear algebria
+import pandas as pd #data processing , CSV file I/O
+
+import os
+for dirname, _,filesnames in os.walk('kaggle/input'):
+    for filename in filenames:
+      print(os.path.join(dirname, filename))
+df = pd.read_csv('/content/SPAM text message 20170820 - Data.csv')
+df.head()
+
+df['Category'].value_counts()
+
+X = df['Message']
+y = df['Category']
+len(X)
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state= 22)
+
+from sklearn.pipeline import Pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB, ComplementNB
+from sklearn.svm import LinearSVC
+from sklearn.metrics import accuracy_score,classification_report
+
+pipeMNB = Pipeline([('tfidf',TfidfVectorizer(stop_words='english', ngram_range=(1,3))),('clf', MultinomialNB())])
+pipeCNB = Pipeline([('tfidf',TfidfVectorizer(stop_words='english',  ngram_range=(1,3))),('clf', ComplementNB())])
+pipeSVC = Pipeline([('tfidf',TfidfVectorizer(stop_words='english',  ngram_range=(1,3))),('clf', LinearSVC())])
+
+pipeMNB.fit(X_train, y_train)
+predictMNB = pipeMNB.predict(X_test)
+print(f"MNB: {accuracy_score(y_test, predictMNB):.2f}")
+pipeCNB.fit(X_train, y_train)
+predictCNB = pipeCNB.predict(X_test)
+print(f"CNB: {accuracy_score(y_test, predictCNB):.2f}")
+pipeSVC.fit(X_train, y_train)
+predictSVC = pipeMNB.predict(X_test)
+print(f"SVC: {accuracy_score(y_test, predictSVC):.2f}")
+
+print(classification_report(y_test, predictSVC))
+
+msg = "you have won a $10000 prize!  contact us for reward!"
+clsf = pipeSVC.predict([msg])
+print(clsf[0])
